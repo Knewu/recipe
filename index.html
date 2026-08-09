@@ -412,6 +412,11 @@ function showUploadStep(){
       <button class="btn ghost" onclick="closeAdd()">닫기</button>
       <button class="btn pink" id="extractBtn" disabled onclick="extract()">✨ 레시피 뽑아내기</button>
     </div>
+    <p class="or-line">─ 링크가 있다면 (인스타는 안 돼요!) ─</p>
+    <div class="field" style="margin-bottom:10px">
+      <input id="urlInput" placeholder="🔗 블로그/레시피 페이지 주소 붙여넣기" inputmode="url">
+    </div>
+    <div class="center"><button class="btn ghost" style="flex:0 0 auto;padding:12px 26px" onclick="extractUrl()">🔗 링크로 가져오기</button></div>
     <p class="or-line">─ 캡쳐 없이 직접 쓰고 싶다면 ─</p>
     <div class="center"><button class="btn ghost" style="flex:0 0 auto;padding:12px 26px" onclick="showForm()">✏️ 직접 입력하기</button></div>
   `;
@@ -447,7 +452,18 @@ function compressImage(file){
   });
 }
 
+function extractUrl(){
+  const url = document.getElementById('urlInput').value.trim();
+  if(!url){ toast('링크를 먼저 붙여넣어 주세요!'); return; }
+  if(!/^https?:\/\//.test(url)){ toast('http로 시작하는 전체 주소를 넣어주세요!'); return; }
+  runExtract({ url });
+}
+
 async function extract(){
+  runExtract({ images: pendingImages });
+}
+
+async function runExtract(payload){
   document.getElementById('addBody').innerHTML = `
     <div class="loading">
       <span class="spin">🍳</span>
@@ -458,7 +474,7 @@ async function extract(){
     const res = await fetch(GAS_URL, {
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},  // preflight 회피
-      body: JSON.stringify({ images: pendingImages })
+      body: JSON.stringify(payload)
     });
     if(!res.ok) throw new Error('서버 응답 오류 ' + res.status);
     const out = await res.json();
