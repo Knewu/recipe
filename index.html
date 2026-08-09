@@ -599,6 +599,44 @@ function toast(msg){
 document.getElementById('addSheet').addEventListener('click', e=>{ if(e.target.id==='addSheet') closeAdd(); });
 document.getElementById('detailSheet').addEventListener('click', e=>{ if(e.target.id==='detailSheet') closeDetail(); });
 
+/* 아래로 스와이프하면 닫기 */
+function makeSwipeClose(bgId, closeFn){
+  const bg = document.getElementById(bgId);
+  const sheet = bg.querySelector('.sheet');
+  let startY = 0, dragY = 0, dragging = false;
+
+  sheet.addEventListener('touchstart', e=>{
+    // 시트 내용이 맨 위로 스크롤된 상태에서만 끌기 시작
+    if(sheet.scrollTop > 0) return;
+    startY = e.touches[0].clientY;
+    dragging = true; dragY = 0;
+    sheet.style.transition = 'none';
+  }, {passive:true});
+
+  sheet.addEventListener('touchmove', e=>{
+    if(!dragging) return;
+    dragY = e.touches[0].clientY - startY;
+    if(dragY > 0){
+      sheet.style.transform = 'translateY(' + dragY + 'px)';
+    }
+  }, {passive:true});
+
+  sheet.addEventListener('touchend', ()=>{
+    if(!dragging) return;
+    dragging = false;
+    sheet.style.transition = 'transform .22s ease';
+    if(dragY > 110){
+      sheet.style.transform = 'translateY(100%)';
+      setTimeout(()=>{ closeFn(); sheet.style.transform = ''; sheet.style.transition = ''; }, 200);
+    } else {
+      sheet.style.transform = '';
+      setTimeout(()=>{ sheet.style.transition = ''; }, 250);
+    }
+  });
+}
+makeSwipeClose('addSheet', closeAdd);
+makeSwipeClose('detailSheet', closeDetail);
+
 updateNickChip();
 if(!nickname) setTimeout(()=>askNickname(false), 600);
 </script>
