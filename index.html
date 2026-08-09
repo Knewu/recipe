@@ -128,7 +128,9 @@ nav{
 .sheet-bg.show{display:flex}
 .sheet{
   background:var(--cream);width:100%;max-width:640px;
-  border-radius:26px 26px 0 0;max-height:92vh;overflow-y:auto;
+  border-radius:26px 26px 0 0;
+  max-height:88vh;max-height:88dvh;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:10px 20px calc(28px + env(safe-area-inset-bottom));
   animation:up .25s ease;
 }
@@ -395,6 +397,7 @@ function openAdd(){
   pendingImages = [];
   showUploadStep();
   document.getElementById('addSheet').classList.add('show');
+  document.querySelector('#addSheet .sheet').scrollTop = 0;
 }
 function closeAdd(){ document.getElementById('addSheet').classList.remove('show'); }
 
@@ -579,6 +582,7 @@ function openDetail(id){
       <button class="btn pink" onclick="closeDetail()">닫기</button>
     </div>`;
   document.getElementById('detailSheet').classList.add('show');
+  document.querySelector('#detailSheet .sheet').scrollTop = 0;
 }
 function closeDetail(){ document.getElementById('detailSheet').classList.remove('show'); }
 
