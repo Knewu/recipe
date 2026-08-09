@@ -302,19 +302,17 @@ nav{
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="config.js"></script>
 <script>
 /* ═══════════════════════════════════════════
-   ⚙️ 설정 — 여기 두 개만 채우면 끝!
-   1) firebaseConfig: 기존 툴(duty.html 등)에서 쓰던 config 그대로 복붙
-   2) GAS_URL: Apps Script 배포 후 웹앱 URL 붙여넣기
+   설정은 config.js 파일에! (이 파일은 건드릴 필요 없음)
 ═══════════════════════════════════════════ */
-const firebaseConfig = {
-  apiKey: "AIzaSyDKesplzevsXQiJ2PAOTJ7lLbdnAv7Ux1A",
-  authDomain: "recipe-4cef2.firebaseapp.com",
-  databaseURL: "https://recipe-4cef2-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "recipe-4cef2",
-};
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwP3m8-dlkKkpBfDRFP8nPHCPIvI4r0EEM-RhjiS3iNpXdq-TD8ZVcsRfFdcu3YFelG/exec";
+if (typeof RS_CONFIG === 'undefined') {
+  document.body.innerHTML = '<div style="padding:60px 30px;text-align:center;font-family:sans-serif;color:#5C4A42"><div style="font-size:50px">🥲</div><h2>config.js 파일이 없어요</h2><p style="margin-top:10px;line-height:1.6">recipe.html과 같은 위치에<br>config.js를 올려주세요!</p></div>';
+  throw new Error('config.js not found');
+}
+const firebaseConfig = RS_CONFIG.firebase;
+const GAS_URL = RS_CONFIG.gasUrl;
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -365,7 +363,7 @@ function render(){
     .filter(r => tab==='mine' ? r.nickname===nickname : r.public)
     .filter(r => {
       if(!q) return true;
-      const hay = (r.title+' '+(r.content||'')+' '+(r.nickname||'')).toLowerCase();
+      const hay = (r.title+' '+(r.ingredients||[]).join(' ')+' '+(r.content||'')+' '+(r.nickname||'')).toLowerCase();
       return hay.includes(q);
     })
     .sort((a,b) => a.title.localeCompare(b.title,'ko') || (b.createdAt||0)-(a.createdAt||0));
@@ -481,7 +479,9 @@ function showForm(data={}, id=null){
     title: data.title ?? r.title ?? '',
     emoji: data.emoji ?? r.emoji ?? '🍽️',
     source: data.source ?? r.source ?? '미상',
-    content: data.content ?? r.content ?? '',
+    ingredients: (data.ingredients ?? r.ingredients ?? []).join('\n'),
+    // 예전 통짜 저장분(content)은 만드는 법 칸으로 불러옴
+    steps: (data.steps ?? r.steps ?? (r.content ? r.content.split('\n') : [])).join('\n'),
     pub: id ? !!r.public : true,
   };
   document.getElementById('addBody').innerHTML = `
@@ -496,8 +496,13 @@ function showForm(data={}, id=null){
     <div class="field"><label>출처</label>
       <input id="fSource" value="${esc(v.source)}" placeholder="안 보이면 '미상'">
     </div>
-    <div class="field"><label>레시피 내용</label>
-      <textarea id="fContent" rows="12" placeholder="재료, 만드는 법 등 자유롭게!">${esc(v.content)}</textarea>
+    <div class="field"><label>재료</label>
+      <textarea id="fIng" rows="6" placeholder="한 줄에 하나씩!&#10;예)&#10;스파게티면 200g&#10;생크림 1컵">${esc(v.ingredients)}</textarea>
+      <p class="hint">한 줄에 하나씩 — 보기 화면에서 체크리스트가 돼요</p>
+    </div>
+    <div class="field"><label>만드는 법</label>
+      <textarea id="fSteps" rows="8" placeholder="한 줄에 한 단계씩!">${esc(v.steps)}</textarea>
+      <p class="hint">한 줄에 한 단계씩 — 번호는 자동으로 붙어요</p>
     </div>
     <div class="toggle-row">
       <div><div class="t-label">🌸 모두에게 공개</div><div class="t-sub">끄면 나만 볼 수 있어요</div></div>
@@ -518,7 +523,8 @@ function save(){
     title,
     emoji: document.getElementById('fEmoji').value.trim() || '🍽️',
     source: document.getElementById('fSource').value.trim() || '미상',
-    content: document.getElementById('fContent').value.trim(),
+    ingredients: document.getElementById('fIng').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    steps: document.getElementById('fSteps').value.split('\n').map(s=>s.trim()).filter(Boolean),
     public: document.getElementById('fPub').checked,
     createdAt: editingId ? (recipes[editingId].createdAt||Date.now()) : Date.now(),
   };
@@ -539,7 +545,15 @@ function openDetail(id){
     <h2 class="jua">${esc(r.title)}</h2>
     <p class="sub">by ${esc(r.nickname||'?')} ${r.public?'':' · 🔒 비공개'}</p>
     <div class="center"><span class="src-link">📌 ${esc(r.source||'미상')}</span></div>
-    ${r.content ? `
+    ${(r.ingredients||[]).length ? `
+      <div class="sec-title jua">🧺 재료 <span style="font-size:12px;color:var(--brown-soft);font-family:Pretendard">눌러서 체크!</span></div>
+      <ul class="ing-list">${r.ingredients.map(i=>`
+        <li onclick="this.classList.toggle('done')"><span class="chk">✓</span><span>${esc(i)}</span></li>`).join('')}
+      </ul>` : ''}
+    ${(r.steps||[]).length ? `
+      <div class="sec-title jua">🍳 만드는 법</div>
+      <ol class="step-list">${r.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>` : ''}
+    ${!((r.ingredients||[]).length) && !((r.steps||[]).length) && r.content ? `
       <div class="sec-title jua">🍳 레시피</div>
       <div class="recipe-box">${esc(r.content)}</div>` : ''}
     <div class="detail-actions">
