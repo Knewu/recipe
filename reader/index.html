@@ -171,6 +171,7 @@ svg{flex:none}
 .sheet.open{transform:translate(-50%,0);visibility:visible;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .sheet-head{display:flex;align-items:center;justify-content:space-between}
 .sheet-head h2{margin:0;font:600 16px var(--f-ui)}
+.sheet-head .ver{margin-left:6px;font:500 11.5px var(--f-ui);color:var(--ink-3);font-variant-numeric:tabular-nums}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap}
 .set-label{font:500 13.5px var(--f-ui);color:var(--ink-2)}
 .seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border-radius:11px;background:var(--wash)}
@@ -293,7 +294,7 @@ body{font-size:14px;overscroll-behavior:none}
 
 <section class="sheet" id="setPanel" aria-label="보기 설정" inert>
   <div class="sheet-head">
-    <h2>보기 설정</h2>
+    <h2>보기 설정 <span class="ver" id="appVer"></span></h2>
     <button class="ib" type="button" data-close aria-label="설정 닫기"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <div class="set-row">
@@ -421,6 +422,8 @@ function h(tag, cls, text) { const e = document.createElement(tag); if (cls) e.c
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const fmt = n => n.toLocaleString('ko-KR');
 const sheetsOf = chars => Math.max(1, Math.round(chars / 200));
+
+const APP_VERSION = '9.27-4';
 
 /* ───────── 홈 화면 앱 ───────── */
 // 아이폰 홈 화면 앱은 상태바가 본문 위쪽을 덮는데, 기기가 알려주는 안전 여백이 실제로 덮인 높이보다 작을 때가 있어서 위를 넉넉히 비운다
@@ -583,10 +586,11 @@ function layout() {
   Object.assign(viewport.style, { left: geo.left + 'px', top: top + 'px', width: vw + 'px', height: vh + 'px' });
   flow.style.width = vw + 'px';
   flow.style.height = vh + 'px';
-  flow.style.columnCount = n;
+  // 사파리는 '1단 + 단 너비 자동'이면 쪽을 나누지 않고 아래로 이어 붙여서, 단 너비를 꼭 숫자로 준다
+  flow.style.columnCount = n; flow.style.columnWidth = colW + 'px';
   flow.style.columnGap = G + 'px';
   flow.style.setProperty('--col-h', vh + 'px');
-  Object.assign(ghost.style, { width: vw + 'px', height: vh + 'px', columnCount: n, columnGap: G + 'px' });
+  Object.assign(ghost.style, { width: vw + 'px', height: vh + 'px', columnCount: n, columnWidth: colW + 'px', columnGap: G + 'px' });
   ghost.style.setProperty('--col-h', vh + 'px');
   ghostSec = -1;
   spine.hidden = n !== 2;
@@ -1452,6 +1456,7 @@ if (document.fonts) { document.fonts.addEventListener && document.fonts.addEvent
 /* ───────── 시작 ───────── */
 let lastId = null; try { lastId = localStorage.getItem('hanjang.last'); } catch (e) {}
 reader.style.setProperty('--top-gap', TOP_GAP + 'px');
+$('appVer').textContent = '버전 ' + APP_VERSION;
 try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySettings); } catch (e) {}
 applySettings(); syncSettings(); setChrome(true);
 loadBook(guideMeta(), GUIDE_TEXT);
@@ -1471,7 +1476,11 @@ loadBook(guideMeta(), GUIDE_TEXT);
 
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  // 새 버전이 설치되면 한 번 저절로 다시 불러온다
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(r => r.update()).catch(() => {}); });
 }
 if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
 </script>

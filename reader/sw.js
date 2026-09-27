@@ -1,5 +1,5 @@
 // txt리더기 오프라인 캐시 (저장소 이름의 hanjang은 예전 이름, 넣은 책을 지키려고 그대로 둠)
-const VERSION = 'hanjang-v3';
+const VERSION = 'hanjang-v4';
 const FONTS = 'hanjang-fonts';
 const LIBS = 'hanjang-libs';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
@@ -14,7 +14,7 @@ const LIB_URLS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(Promise.all([
-    caches.open(VERSION).then(c => c.addAll(CORE)),
+    caches.open(VERSION).then(c => c.addAll(CORE.map(u => new Request(u, { cache: 'reload' })))),   // 브라우저 캐시 말고 서버에서 새로
     // 워드·한글·PDF 읽기 도구도 미리 받아 둔다 (실패해도 설치는 계속)
     caches.open(LIBS).then(c => Promise.allSettled(LIB_URLS.map(u => c.match(u).then(hit => hit || c.add(u)))))
   ]).then(() => self.skipWaiting()));
@@ -39,11 +39,12 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
-  // 앱 파일: 캐시로 바로 열고, 인터넷이 되면 뒤에서 새 버전 받아 두기
+  // 앱 파일: 인터넷이 되면 늘 서버의 새 버전(3초 안에), 안 되면 저장해 둔 것
   e.respondWith(caches.open(VERSION).then(async c => {
     const key = req.mode === 'navigate' ? './index.html' : req;
-    const hit = await c.match(key);
-    const net = fetch(req).then(res => { if (res.ok) c.put(key, res.clone()); return res; }).catch(() => null);
-    return hit || (await net) || Response.error();
+    const net = fetch(req, { cache: 'no-cache' }).then(res => { if (res.ok) c.put(key, res.clone()); return res; });
+    const slow = new Promise(r => setTimeout(r, 3000, null));
+    try { const res = await Promise.race([net, slow]); if (res) return res; } catch (err) {}
+    return (await c.match(key)) || net.catch(() => Response.error());
   }));
 });
