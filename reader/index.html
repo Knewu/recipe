@@ -614,10 +614,12 @@ function renderSection() {
   flow.replaceChildren(frag);
 }
 const rng = document.createRange();
+const FORCE_HIT = /[?&]hit=1/.test(location.search);   // 시험용: 화면 짚기 방식만 쓰기
 function measure() {
   flow.getAnimations && flow.getAnimations().forEach(a => a.cancel());
   flow.style.transition = 'none'; flow.style.transform = 'none';
   const base = flow.getBoundingClientRect().left, st = geo.stride;
+  // ① 글자 위치로 쪽 나누기 (크롬은 정확, 아이폰 사파리는 단 나눔을 빼고 알려 줄 때가 있음)
   const starts = []; let max = 0;
   for (const el of flow.children) {
     const o = +el.dataset.o, l = +el.dataset.l;
@@ -632,10 +634,62 @@ function measure() {
       if (starts[p] === undefined) starts[p] = o + Math.round(l * i / n);
     }
   }
-  pageCount = max + 1;
-  starts[0] = cur.sec === 0 ? -1 : book.secs[cur.sec].start;
-  for (let i = 1; i < pageCount; i++) if (starts[i] === undefined) starts[i] = starts[i - 1];
-  pageStarts = starts.slice(0, pageCount);
+  const rectCount = max + 1;
+  // ② 글 전체 너비로 쪽 수 세기 (어느 브라우저든 믿을 만함)
+  const gh = ghost.hidden; ghost.hidden = true;
+  const sw = Math.max(flow.scrollWidth, viewport.scrollWidth);
+  ghost.hidden = gh;
+  const cols = Math.max(1, Math.round((sw + geo.G) / (geo.colW + geo.G)));
+  const widthCount = Math.max(1, Math.ceil(cols / geo.n));
+  pageCount = Math.max(rectCount, widthCount);
+  // 두 방법이 다르면 ①을 버리고 쪽마다 화면을 직접 짚어서 첫 글자를 찾는다
+  let hs = null;
+  if (FORCE_HIT || widthCount !== rectCount) hs = hitStarts(pageCount);
+  const src = hs || starts;
+  const sec = book.secs[cur.sec];
+  pageStarts = fillStarts(src, pageCount, cur.sec === 0 ? -1 : sec.start, sec.end);
+  flow.style.transform = 'none';
+}
+// 화면의 한 점에 있는 글자 위치 (사파리·크롬·파이어폭스)
+function caretAt(x, y) {
+  try {
+    if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(x, y); return r && { node: r.startContainer, off: r.startOffset }; }
+    if (document.caretPositionFromPoint) { const c = document.caretPositionFromPoint(x, y); return c && { node: c.offsetNode, off: c.offset }; }
+  } catch (e) {}
+  return null;
+}
+function hitStarts(count) {
+  const out = new Array(count);
+  const keep = { z: viewport.style.zIndex, us: flow.style.userSelect, wus: flow.style.webkitUserSelect };
+  viewport.style.zIndex = '2147483000';                   // 메뉴·설정 창에 가리지 않게 잠깐 맨 위로
+  flow.style.userSelect = flow.style.webkitUserSelect = 'text';
+  const vr = viewport.getBoundingClientRect();
+  const y = vr.top + Math.min(10, S.size * 0.6);
+  for (let p = 0; p < count; p++) {
+    flow.style.transform = `translate3d(${-p * geo.stride}px,0,0)`;
+    const c = caretAt(vr.left + 3, y);
+    if (!c || !c.node || !flow.contains(c.node)) continue;
+    const el = c.node.nodeType === 3 ? c.node.parentElement : c.node;
+    const host = el && el.closest && el.closest('[data-o]');
+    if (host && flow.contains(host)) out[p] = +host.dataset.o + (c.node.nodeType === 3 ? Math.min(c.off, +host.dataset.l) : 0);
+  }
+  viewport.style.zIndex = keep.z; flow.style.userSelect = keep.us; flow.style.webkitUserSelect = keep.wus;
+  return out;
+}
+// 모르는 쪽의 시작 글자는 앞뒤로 아는 쪽 사이를 비례로 채운다 (쪽 번호가 뒤로 가지 않게)
+function fillStarts(src, count, s0, end) {
+  const v = new Array(count + 1); v[0] = s0; v[count] = end;
+  const known = [0];
+  for (let i = 1; i < count; i++) {
+    const x = src[i];
+    if (typeof x === 'number' && !isNaN(x) && x >= v[known[known.length - 1]] && x <= end) { v[i] = x; known.push(i); }
+  }
+  known.push(count);
+  for (let k = 0; k < known.length - 1; k++) {
+    const a = known[k], b = known[k + 1];
+    for (let i = a + 1; i < b; i++) v[i] = Math.round(v[a] + (v[b] - v[a]) * (i - a) / (b - a));
+  }
+  return v.slice(0, count);
 }
 function show(animate) {
   flow.style.transition = (animate && S.turn === 'slide') ? '' : 'none';
