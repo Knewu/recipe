@@ -45,9 +45,9 @@ button{font:inherit;color:inherit}
 svg{flex:none}
 
 /* ── 리더 ── */
-.reader{position:relative;height:100%;overflow:hidden;background:var(--paper);color:var(--ink)}
+.reader{--top-gap:0px;position:relative;height:100%;overflow:hidden;background:var(--paper);color:var(--ink)}
 .stage{position:absolute;inset:0;touch-action:none;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.runhead{position:absolute;top:0;left:0;right:0;height:56px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.runhead{position:absolute;top:var(--top-gap);left:0;right:0;height:56px;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .runhead span{max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:500 12px/1 var(--f-ui);letter-spacing:.06em;color:var(--ink-3)}
 .viewport{position:absolute;overflow:hidden}
 .flow{height:100%;column-fill:auto;font-size:var(--fs);line-height:var(--lh);color:var(--ink);font-family:var(--f-batang);transition:transform .34s cubic-bezier(.22,.7,.2,1);will-change:transform;font-kerning:normal}
@@ -61,14 +61,14 @@ svg{flex:none}
 .tp .rule{display:block;width:2.4em;height:2px;background:var(--accent)}
 .tp .meta{font:500 13px/1.7 var(--f-ui);color:var(--ink-2);letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .spine{position:absolute;width:40px;margin-left:-20px;background:linear-gradient(90deg,transparent,var(--spine) 50%,transparent);pointer-events:none}
-.ribbon{position:absolute;top:0;width:20px;height:54px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);pointer-events:none;animation:drop .28s cubic-bezier(.2,.8,.2,1)}
+.ribbon{position:absolute;top:var(--top-gap);width:20px;height:54px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);pointer-events:none;animation:drop .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes drop{from{transform:translateY(-100%)}}
 .folio{position:absolute;left:0;right:0;bottom:0;height:48px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;pointer-events:none;font:500 12px/1 var(--f-ui);color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.03em}
 .folio-pct{text-align:right}
 
 /* 위아래 메뉴 */
 .bar{position:absolute;left:0;right:0;z-index:5;background:var(--paper);background:color-mix(in srgb,var(--paper) 93%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:transform .24s cubic-bezier(.2,.7,.2,1),opacity .2s}
-.bar.top{top:0;height:54px;display:flex;align-items:center;gap:2px;padding-inline:8px;border-bottom:1px solid var(--line)}
+.bar.top{top:0;height:calc(54px + var(--top-gap));padding-top:var(--top-gap);display:flex;align-items:center;gap:2px;padding-inline:8px;border-bottom:1px solid var(--line)}
 .bar.bottom{bottom:0;padding:8px 10px 10px;border-top:1px solid var(--line)}
 .reader:not(.chrome) .bar.top{transform:translateY(-100%);opacity:0;pointer-events:none}
 .reader:not(.chrome) .bar.bottom{transform:translateY(100%);opacity:0;pointer-events:none}
@@ -407,6 +407,11 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const fmt = n => n.toLocaleString('ko-KR');
 const sheetsOf = chars => Math.max(1, Math.round(chars / 200));
 
+/* ───────── 홈 화면 앱 ───────── */
+// 아이폰 홈 화면 앱은 상태바가 본문 위쪽을 덮는데, 기기가 알려주는 안전 여백이 실제로 덮인 높이보다 작을 때가 있어서 위를 넉넉히 비운다
+const STANDALONE = window.navigator.standalone === true || !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+const TOP_GAP = STANDALONE ? 30 : 0;
+
 /* ───────── 설정 ───────── */
 const DEF = { size: 18, lh: 1.8, margin: 'normal', font: 'batang', paper: 'auto', spread: true,
   motion: !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) };
@@ -548,7 +553,7 @@ function layout() {
   const r = stage.getBoundingClientRect();
   const W = r.width, H = r.height, fs = S.size;
   const mx = S.margin === 'narrow' ? 18 : S.margin === 'wide' ? clamp(W * 0.1, 32, 120) : clamp(W * 0.06, 24, 72);
-  const top = 56, bot = 48;
+  const top = 56 + TOP_GAP, bot = 48;
   const A = Math.max(120, W - 2 * mx);
   const G = Math.round(Math.max(48, mx * 1.6));
   const colMax = fs * 34, colMin = fs * 17;
@@ -1233,7 +1238,8 @@ function applySettings() {
   if (S.paper === 'auto') reader.removeAttribute('data-paper'); else reader.dataset.paper = S.paper;
   const bg = S.paper === 'auto' ? '' : getComputedStyle(reader).backgroundColor;
   document.body.style.background = bg; document.documentElement.style.background = bg;
-  const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = bg || getComputedStyle(document.body).backgroundColor;
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) { const m = (bg || getComputedStyle(document.body).backgroundColor).match(/\d+/g); if (m) tc.content = '#' + m.slice(0, 3).map(v => (+v).toString(16).padStart(2, '0')).join(''); }
 }
 function syncSettings() {
   $('fsVal').textContent = S.size;
@@ -1337,6 +1343,8 @@ if (document.fonts) { document.fonts.addEventListener && document.fonts.addEvent
 
 /* ───────── 시작 ───────── */
 let lastId = null; try { lastId = localStorage.getItem('hanjang.last'); } catch (e) {}
+reader.style.setProperty('--top-gap', TOP_GAP + 'px');
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySettings); } catch (e) {}
 applySettings(); syncSettings(); setChrome(true);
 loadBook(guideMeta(), GUIDE_TEXT);
 (async () => {
