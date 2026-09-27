@@ -253,7 +253,7 @@ body{font-size:14px;overscroll-behavior:none}
   <div class="lib-actions">
     <label class="btn primary" for="fileInput" id="fileLabel" tabindex="0" role="button">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6.5 3.5h7.5l4 4v13h-11.5z"/><path d="M14 3.5v4h4M9.5 12.5h5M9.5 16h5"/></svg>
-      txt 파일 열기
+      파일 열기
     </label>
     <button class="btn" id="pasteBtn" type="button">글 붙여넣기</button>
   </div>
@@ -267,7 +267,7 @@ body{font-size:14px;overscroll-behavior:none}
       <button class="btn primary" type="submit">책으로 만들기</button>
     </div>
   </form>
-  <p class="lib-hint">컴퓨터에서는 txt 파일을 화면에 끌어다 놓아도 돼요. EUC-KR로 저장된 옛날 한글 파일도 알아서 읽어요.</p>
+  <p class="lib-hint">txt, 워드(docx), 한글(hwp·hwpx), PDF를 넣을 수 있어요. 표와 그림은 빼고 글자만 가져와요. 컴퓨터에서는 파일을 화면에 끌어다 놓아도 돼요.</p>
   <ul class="books" id="bookList"></ul>
   <p class="lib-note" id="storeNote"></p>
 </aside>
@@ -329,7 +329,7 @@ body{font-size:14px;overscroll-behavior:none}
 
 <div class="dropzone" id="dropzone" hidden>놓으면 서재에 넣을게요</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<input type="file" id="fileInput" accept=".txt,.md,.text,text/plain" multiple hidden>
+<input type="file" id="fileInput" accept=".txt,.md,.text,.docx,.hwpx,.hwp,.pdf,text/plain,application/pdf" multiple hidden>
 
 <script>
 (function () {
@@ -339,11 +339,13 @@ document.documentElement.lang = 'ko';
 /* ───────── 예시 책 ───────── */
 const GUIDE_ID = 'guide';
 const GUIDE_TITLE = 'txt리더기 사용 안내서';
-const GUIDE_TEXT = `이 책은 txt리더기를 처음 열면 보이는 안내서예요. 내 txt 파일을 넣기 전에 한번 넘겨 보면서 손에 익혀 보세요. 화면 오른쪽을 누르면 다음 쪽으로 넘어가요.
+const GUIDE_TEXT = `이 책은 txt리더기를 처음 열면 보이는 안내서예요. 내 파일을 넣기 전에 한번 넘겨 보면서 손에 익혀 보세요. 화면 오른쪽을 누르면 다음 쪽으로 넘어가요.
 
 제1장 책 넣기
 
-왼쪽 위 서재 버튼을 누르면 서재가 열려요. 'txt 파일 열기'를 누르고 휴대폰이나 컴퓨터에 있는 텍스트 파일을 고르면 바로 책이 돼요. 여러 개를 한꺼번에 골라도 되고, 컴퓨터라면 파일을 화면 위로 끌어다 놓기만 해도 서재에 들어가요.
+왼쪽 위 서재 버튼을 누르면 서재가 열려요. '파일 열기'를 누르고 휴대폰이나 컴퓨터에 있는 파일을 고르면 바로 책이 돼요. txt뿐 아니라 워드(docx), 한글(hwp, hwpx), PDF도 넣을 수 있어요. 여러 개를 한꺼번에 골라도 되고, 컴퓨터라면 파일을 화면 위로 끌어다 놓기만 해도 서재에 들어가요.
+
+워드, 한글, PDF는 글자만 뽑아서 책으로 만들어요. 표는 칸마다 한 줄씩 풀려 나오고, 그림과 글자 색은 빠져요. 워드에서 '제목 1' 같은 제목 스타일을 쓴 줄은 목차에 들어가요. PDF는 쪽마다 되풀이되는 머리글과 쪽 번호를 걸러내고 줄을 문단으로 다시 이어 붙이는데, 문서에 따라 문단이 조금 어긋날 수 있어요. 스캔한 이미지 PDF, 암호가 걸린 파일, 배포용으로 저장한 한글 파일은 읽을 수 없어요.
 
 오래된 한글 txt 파일은 EUC-KR 방식으로 저장된 경우가 많아서 다른 프로그램에서 열면 글자가 깨지곤 해요. txt리더기는 먼저 UTF-8로 읽어 보고, 맞지 않으면 EUC-KR로 다시 읽어요. 따로 고를 건 없어요.
 
@@ -387,7 +389,7 @@ txt리더기는 짧은 한 줄짜리 제목을 찾아서 목차를 만들어요.
 
 에필로그
 
-이제 서재를 열고 읽고 싶은 txt 파일을 넣어 보세요. 휴대폰에서는 이 페이지를 홈 화면에 추가해 두면 앱처럼 아이콘을 눌러 바로 열 수 있어요.`;
+이제 서재를 열고 읽고 싶은 파일을 넣어 보세요. 휴대폰에서는 이 페이지를 홈 화면에 추가해 두면 앱처럼 아이콘을 눌러 바로 열 수 있어요.`;
 
 /* ───────── 요소 ───────── */
 const $ = id => document.getElementById(id);
@@ -475,7 +477,10 @@ function normalize(t) { return t.replace(/^﻿/, '').replace(/\r\n?/g, '\n'); }
 const RX_H = /^(?:제\s*[0-9０-９一二三四五六七八九十百千]+\s*[장화부편권막절](?=$|[\s.:：\-–—)\]」』>〉》])|[0-9]{1,4}\s*[장화부편](?=$|[\s.:：\-–—)\]」』>〉》])|(?:chapter|part|episode)\s*[0-9ivxlc]+\b|(?:프롤로그|에필로그|서장|종장|외전|작가의\s*말|후기)(?=$|[\s.:：\-–—)\]」』>〉》(])|(?:prologue|epilogue)\b|#{1,3}\s+\S)/i;
 const RX_NUM = /^[\s\-–—=─<〈《\[【#*]*\d{1,4}\s*(?:화|장)?[\s\-–—=─>〉》\]】*]*$/;
 const WS = /[\s　]/;
-function isHeading(t) { return t.length <= 40 && (RX_H.test(t) || RX_NUM.test(t)); }
+function isHeading(t) {
+  if (/^#{1,3}\s+\S/.test(t)) return t.length <= 90;   // 워드 제목 스타일·PDF 큰 글자에서 온 제목
+  return t.length <= 40 && (RX_H.test(t) || RX_NUM.test(t));
+}
 
 function parse(text) {
   const paras = []; const L = text.length; let i = 0, sp = false;
@@ -741,16 +746,290 @@ async function addBook(title, text) {
   const ok = (await Store.put('text', { id, text })) & (await Store.put('meta', meta));
   return { meta, ok: !!ok };
 }
+/* ───────── 워드·한글·PDF에서 글자 뽑기 ───────── */
+const CDN = 'https://cdn.jsdelivr.net/npm/';
+const LIBS = {
+  zip: [CDN + 'jszip@3.10.1/dist/jszip.min.js'],
+  pdf: [CDN + 'pdfjs-dist@3.11.174/build/pdf.min.js', CDN + 'pdfjs-dist@3.11.174/build/pdf.worker.min.js'],
+  hwp: [CDN + 'cfb@1.2.2/dist/cfb.min.js', CDN + 'pako@2.1.0/dist/pako_inflate.min.js']
+};
+const PDF_CMAPS = CDN + 'pdfjs-dist@3.11.174/cmaps/';
+class ReadError extends Error {}
+const scriptCache = {};
+function loadScript(src) {
+  if (!scriptCache[src]) scriptCache[src] = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src; s.async = false;
+    s.onload = () => res();
+    s.onerror = () => { delete scriptCache[src]; s.remove(); rej(new ReadError('문서를 읽는 도구를 받지 못했어요. 인터넷이 연결된 상태에서 한 번 더 넣어 주세요.')); };
+    document.head.append(s);
+  });
+  return scriptCache[src];
+}
+async function need(k) { for (const src of LIBS[k]) await loadScript(src); }
+const parseXml = s => new DOMParser().parseFromString(s, 'application/xml');
+function hasAncestor(el, names) { for (let a = el.parentElement; a; a = a.parentElement) if (names.includes(a.localName)) return true; return false; }
+function childEl(el, local) { for (let c = el && el.firstElementChild; c; c = c.nextElementSibling) if (c.localName === local) return c; return null; }
+function wAttr(el, name) { return (el && (el.getAttribute('w:' + name) || el.getAttributeNS(el.namespaceURI, name))) || ''; }
+
+async function fromZip(buf, ext) {
+  await need('zip');
+  let zip;
+  try { zip = await JSZip.loadAsync(buf); } catch (e) { throw new ReadError('파일을 열지 못했어요. 파일이 깨졌을 수 있어요.'); }
+  if (zip.file('word/document.xml')) return fromDocx(zip);
+  if (Object.keys(zip.files).some(n => /^Contents\/section\d+\.xml$/i.test(n))) return fromHwpx(zip);
+  if (ext === 'docx' || ext === 'hwpx') throw new ReadError(`${ext} 파일 안에서 본문을 찾지 못했어요.`);
+  throw new ReadError('이 형식은 못 읽어요. txt, docx, hwp, hwpx, pdf만 돼요.');
+}
+
+/* 워드(docx): 문단 그대로, '제목 1~3' 스타일은 목차 제목으로 */
+async function fromDocx(zip) {
+  const doc = parseXml(await zip.file('word/document.xml').async('string'));
+  const heads = new Set();
+  const sf = zip.file('word/styles.xml');
+  if (sf) {
+    const sd = parseXml(await sf.async('string'));
+    for (const st of sd.getElementsByTagNameNS('*', 'style')) {
+      const name = wAttr(childEl(st, 'name'), 'val');
+      const ol = childEl(childEl(st, 'pPr'), 'outlineLvl');
+      const lvl = ol ? parseInt(wAttr(ol, 'val'), 10) : 9;
+      if (/^(heading|제목)\s*[1-3]$/i.test(name) || /^title$/i.test(name) || lvl <= 2) heads.add(wAttr(st, 'styleId'));
+    }
+  }
+  const out = [];
+  for (const p of doc.getElementsByTagNameNS('*', 'p')) {
+    if (!/wordprocessingml/.test(p.namespaceURI || '') || hasAncestor(p, ['Fallback'])) continue;
+    let s = '';
+    (function walk(n) {
+      for (let c = n.firstElementChild; c; c = c.nextElementSibling) {
+        switch (c.localName) {
+          case 'p': case 'pPr': case 'rPr': case 'Fallback': case 'del': case 'delText': case 'instrText': break;
+          case 't': s += c.textContent; break;
+          case 'tab': case 'ptab': s += ' '; break;
+          case 'br': case 'cr': s += '\n'; break;
+          case 'noBreakHyphen': s += '-'; break;
+          default: walk(c);
+        }
+      }
+    })(p);
+    const ppr = childEl(p, 'pPr');
+    const ol = childEl(ppr, 'outlineLvl');
+    const isHead = heads.has(wAttr(childEl(ppr, 'pStyle'), 'val')) || (ol && parseInt(wAttr(ol, 'val'), 10) <= 2);
+    const t = s.trim();
+    out.push(isHead && t && t.length <= 80 && !t.includes('\n') ? '# ' + t : s);
+  }
+  return out.join('\n');
+}
+
+/* 한글(hwpx): Contents/section*.xml 의 hp:p 문단 */
+async function fromHwpx(zip) {
+  const num = n => parseInt(n.match(/(\d+)\.xml$/i)[1], 10);
+  const names = Object.keys(zip.files).filter(n => /^Contents\/section\d+\.xml$/i.test(n)).sort((a, b) => num(a) - num(b));
+  const out = [];
+  for (const name of names) {
+    const doc = parseXml(await zip.file(name).async('string'));
+    for (const p of doc.getElementsByTagNameNS('*', 'p')) {
+      if (!/paragraph/.test(p.namespaceURI || '') || hasAncestor(p, ['header', 'footer', 'masterPage'])) continue;
+      let s = '';
+      (function walk(n) {
+        for (let c = n.firstElementChild; c; c = c.nextElementSibling) {
+          if (c.localName === 'p') continue;
+          if (c.localName === 't') {
+            for (const k of c.childNodes) {
+              if (k.nodeType === 3) s += k.nodeValue;
+              else if (k.localName === 'lineBreak') s += '\n';
+              else if (k.localName === 'tab' || k.localName === 'nbSpace' || k.localName === 'fwSpace') s += ' ';
+            }
+          } else walk(c);
+        }
+      })(p);
+      out.push(s);
+    }
+  }
+  return out.join('\n');
+}
+
+/* 한글(hwp 5.x): 압축된 BodyText/Section* 스트림의 문단 글자 레코드 */
+async function fromHwp(buf) {
+  await need('hwp');
+  let cfb;
+  try { cfb = CFB.read(new Uint8Array(buf), { type: 'array' }); } catch (e) { throw new ReadError('hwp 파일을 열지 못했어요. 파일이 깨졌을 수 있어요.'); }
+  const fh = CFB.find(cfb, '/FileHeader');
+  if (!fh) {
+    if (CFB.find(cfb, '/WordDocument')) throw new ReadError('옛날 워드(.doc) 파일은 못 읽어요. 워드에서 docx로 저장해서 넣어 주세요.');
+    throw new ReadError('한글 문서가 아니거나 파일이 깨졌어요.');
+  }
+  const h = fh.content;
+  let sig = ''; for (let i = 0; i < 17; i++) sig += String.fromCharCode(h[i]);
+  if (sig !== 'HWP Document File') throw new ReadError('한글 문서가 아니거나 파일이 깨졌어요.');
+  const flags = h[36] | (h[37] << 8) | (h[38] << 16) | (h[39] << 24);
+  if (flags & 2) throw new ReadError('암호가 걸린 hwp는 못 읽어요. 한글에서 암호를 풀고 저장한 뒤 넣어 주세요.');
+  if (flags & 4) throw new ReadError('배포용 문서로 저장된 hwp는 못 읽어요.');
+  const out = [];
+  for (let k = 0; ; k++) {
+    const e = CFB.find(cfb, '/BodyText/Section' + k);
+    if (!e || !e.content) break;
+    let data = e.content instanceof Uint8Array ? e.content : Uint8Array.from(e.content);
+    if (flags & 1) { try { data = pako.inflateRaw(data); } catch (err) { throw new ReadError('hwp 본문을 풀지 못했어요. 파일이 깨졌을 수 있어요.'); } }
+    hwpRecords(data, out);
+  }
+  if (!out.length) throw new ReadError('hwp 안에서 본문을 찾지 못했어요.');
+  return out.join('\n');
+}
+function hwpRecords(u8, out) {
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = u8.length;
+  const HEAD = 0x68656164, FOOT = 0x666F6F74;   // 머리말·꼬리말 조판 부호
+  let i = 0, skip = -1;
+  while (i + 4 <= n) {
+    const hd = dv.getUint32(i, true); i += 4;
+    const tag = hd & 0x3FF, level = (hd >>> 10) & 0x3FF; let size = hd >>> 20;
+    if (size === 0xFFF) { if (i + 4 > n) break; size = dv.getUint32(i, true); i += 4; }
+    if (skip >= 0) { if (level > skip) { i += size; continue; } skip = -1; }
+    if (tag === 71 && size >= 4) { const id = dv.getUint32(i, true); if (id === HEAD || id === FOOT) { skip = level; i += size; continue; } }
+    if (tag === 66) out.push('');                                   // 문단 시작
+    else if (tag === 67) {                                          // 문단 글자
+      const t = hwpText(u8, i, Math.min(n, i + size));
+      if (out.length) out[out.length - 1] = t; else out.push(t);
+    }
+    i += size;
+  }
+}
+function hwpText(u8, i, end) {
+  const codes = [];
+  while (i + 1 < end) {
+    const c = u8[i] | (u8[i + 1] << 8);
+    if (c >= 32) { codes.push(c); i += 2; continue; }
+    if (c === 10) codes.push(10);                   // 줄 바꿈
+    else if (c === 30 || c === 31) codes.push(32);  // 묶음 빈칸, 고정폭 빈칸
+    else if (c === 24) codes.push(45);              // 하이픈
+    if (c === 0 || c === 10 || c === 13 || (c >= 24 && c <= 31)) i += 2;   // 한 글자짜리 조판 부호
+    else { if (c === 9) codes.push(32); i += 16; }                          // 표·그림·탭 같은 8글자짜리 조판 부호
+  }
+  let s = '';
+  for (let k = 0; k < codes.length; k += 8192) s += String.fromCharCode.apply(null, codes.slice(k, k + 8192));
+  return s;
+}
+
+/* PDF: 줄을 모아 문단으로 잇고, 쪽마다 반복되는 머리글·쪽 번호는 뺀다 */
+async function fromPdf(buf, onPage) {
+  await need('pdf');
+  const lib = window.pdfjsLib;
+  lib.GlobalWorkerOptions.workerSrc = LIBS.pdf[1];
+  let pdf;
+  try {
+    pdf = await lib.getDocument({ data: new Uint8Array(buf), cMapUrl: PDF_CMAPS, cMapPacked: true, isEvalSupported: false, disableFontFace: true }).promise;
+  } catch (e) {
+    if (e && e.name === 'PasswordException') throw new ReadError('암호가 걸린 PDF는 열 수 없어요.');
+    throw new ReadError('PDF를 열지 못했어요. 파일이 깨졌을 수 있어요.');
+  }
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    pages.push(pdfLines((await page.getTextContent()).items));
+    page.cleanup();
+    if (onPage) onPage(i, pdf.numPages);
+  }
+  const total = pages.reduce((a, p) => a + p.reduce((b, l) => b + l.t.length, 0), 0);
+  pdf.destroy();
+  if (total < pages.length * 15) throw new ReadError('글자를 뽑을 수 없는 PDF예요. 스캔한 이미지로 된 PDF는 읽을 수 없어요.');
+  return pdfToText(pages);
+}
+function pdfLines(items) {
+  const lines = []; let cur = null;
+  const push = () => { if (cur && cur.t.trim()) lines.push(cur); cur = null; };
+  for (const it of items) {
+    if (typeof it.str !== 'string') continue;
+    const x = it.transform[4], y = it.transform[5], h = Math.abs(it.transform[3]) || it.height || 0;
+    if (cur && it.str.trim() && Math.abs(y - cur.y) > Math.max(2, Math.max(cur.h, h) * 0.5)) push();
+    if (!cur) cur = { t: '', x: null, y, h: 0, r: x };
+    if (it.str) {
+      if (cur.t && !/\s$/.test(cur.t) && !/^\s/.test(it.str) && x - cur.r > h * 0.2) cur.t += ' ';
+      if (cur.x === null && it.str.trim()) cur.x = x;
+      cur.t += it.str; cur.r = Math.max(cur.r, x + (it.width || 0)); cur.h = Math.max(cur.h, h);
+    }
+    if (it.hasEOL) push();
+  }
+  push();
+  return lines.filter(l => l.x !== null);
+}
+function median(a) { if (!a.length) return 0; const s = a.slice().sort((p, q) => p - q); return s[s.length >> 1]; }
+function pdfToText(pages) {
+  const all = pages.flat();
+  const H = median(all.map(l => l.h)) || 10;
+  const RX_FOLIO = /^[\s\-–—(\[<]*(\d{1,4}|[ivxlcdm]{1,7})([\s\-–—)\]>]*|\s*\/\s*\d{1,4})$/i;
+  // 머리글·꼬리말: 쪽 위아래 두 줄 중 여러 쪽에 되풀이되는 줄과 쪽 번호
+  if (pages.length >= 3) {
+    const key = l => l.t.replace(/\d+/g, '#').replace(/\s+/g, '');
+    const count = new Map();
+    pages.forEach(p => { const seen = new Set(); [0, 1, p.length - 2, p.length - 1].forEach(i => { const l = p[i]; if (l && !seen.has(i)) { seen.add(i); const k = key(l); count.set(k, (count.get(k) || 0) + 1); } }); });
+    const lim = Math.max(3, pages.length * 0.4);
+    pages.forEach((p, pi) => {
+      pages[pi] = p.filter((l, i) => {
+        const edge = i < 2 || i >= p.length - 2;
+        return !(edge && (count.get(key(l)) >= lim || RX_FOLIO.test(l.t.trim())));
+      });
+    });
+  } else pages.forEach((p, pi) => { pages[pi] = p.filter((l, i) => !((i === 0 || i === p.length - 1) && RX_FOLIO.test(l.t.trim()))); });
+
+  const out = []; let para = '', prev = null, prevPage = -1;
+  const flush = () => { if (para.trim()) out.push(para.trim()); para = ''; };
+  pages.forEach((p, pi) => {
+    if (!p.length) return;
+    const left = median(p.map(l => l.x).filter(x => x !== null).sort((a, b) => a - b).slice(0, Math.max(1, Math.ceil(p.length / 3))));
+    const right = Math.max(...p.map(l => l.r));
+    const gaps = []; for (let i = 1; i < p.length; i++) { const d = p[i - 1].y - p[i].y; if (d > 0 && d < H * 3) gaps.push(d); }
+    const gap = median(gaps) || H * 1.5;
+    p.forEach(l => { l.pageRight = right; });
+    p.forEach(l => {
+      const t = l.t.replace(/\s+/g, ' ').trim();
+      if (l.h > H * 1.2 && t.length <= 60 && !/[.,]$/.test(t)) { flush(); out.push('# ' + t); prev = null; return; }   // 본문보다 큰 짧은 줄은 제목
+      if (!prev) { para = t; prev = l; prevPage = pi; return; }
+      let brk = false;
+      if (prevPage === pi && prev.y - l.y > gap * 1.5) brk = true;                     // 줄 사이가 벌어짐
+      if (l.x - left > H * 0.7 && l.x - left < H * 4) brk = true;                        // 들여쓴 첫 줄
+      if (prev.r < prev.pageRight - H * 2.5) brk = true;                                 // 앞 줄이 짧게 끝남
+      if (brk) { flush(); para = t; }
+      else if (/[A-Za-z]-$/.test(para) && /^[a-z]/.test(t)) para = para.slice(0, -1) + t;
+      else para += ' ' + t;
+      prev = l; prevPage = pi;
+    });
+  });
+  flush();
+  return out.join('\n');
+}
+
+async function fileToText(f) {
+  const buf = await f.arrayBuffer();
+  const u8 = new Uint8Array(buf, 0, Math.min(32, buf.byteLength));
+  const ext = ((f.name.match(/\.([^.]+)$/) || ['', ''])[1] || '').toLowerCase();
+  const head = String.fromCharCode(...u8);
+  if (head.startsWith('%PDF')) {
+    return fromPdf(buf, (i, n) => { if (n > 3) toast(`PDF 읽는 중 ${i}/${n}쪽`, 60000); });
+  }
+  if (u8[0] === 0x50 && u8[1] === 0x4B) return fromZip(buf, ext);
+  if (u8[0] === 0xD0 && u8[1] === 0xCF && u8[2] === 0x11 && u8[3] === 0xE0) return fromHwp(buf);
+  if (head.startsWith('HWP Document File')) throw new ReadError('한글 97 이전 형식이라 못 읽어요. 한글에서 hwpx로 저장해서 넣어 주세요.');
+  if (['pdf', 'docx', 'hwpx', 'hwp'].includes(ext)) throw new ReadError(`${ext} 파일이 깨졌거나 형식이 달라요.`);
+  return decode(buf);
+}
+
+const DOC_EXT = /\.(txt|md|text|docx|hwpx|hwp|pdf)$/i;
 async function addFiles(files) {
   let last = null, n = 0, unsaved = false;
   for (const f of files) {
-    const isText = /\.(txt|md|text)$/i.test(f.name) || (f.type || '').startsWith('text/');
-    if (!isText) { toast(`${f.name} 파일은 txt가 아니라서 건너뛰었어요.`); continue; }
+    const ext = ((f.name.match(/\.([^.]+)$/) || ['', ''])[1] || '').toLowerCase();
+    if (!DOC_EXT.test(f.name) && !(f.type || '').startsWith('text/')) {
+      toast(ext === 'doc' ? '옛날 워드(.doc)는 못 읽어요. 워드에서 docx로 저장해서 넣어 주세요.' : `${f.name}: 이 형식은 못 읽어요. txt, docx, hwp, hwpx, pdf만 돼요.`, 4500);
+      continue;
+    }
     try {
-      const text = decode(await f.arrayBuffer());
+      if (!/^(txt|md|text)$/.test(ext)) toast('문서에서 글자를 뽑는 중이에요…', 60000);
+      const text = await fileToText(f);
       const r = await addBook(f.name.replace(/\.[^.]+$/, ''), text);
       if (r) { last = r; n++; if (!r.ok) unsaved = true; }
-    } catch (e) { toast(`${f.name} 파일을 읽지 못했어요.`); }
+    } catch (e) {
+      toast(e instanceof ReadError ? e.message : `${f.name} 파일을 읽지 못했어요.`, 4500);
+      if (!(e instanceof ReadError)) console.error(e);
+    }
   }
   if (!last) return;
   await openBook(last.meta.id);
@@ -778,7 +1057,7 @@ async function renderLibrary() {
   if (book && !metas.some(m => m.id === book.meta.id)) metas.push(book.meta);
   metas.sort((a, b) => (a.sample ? 1 : 0) - (b.sample ? 1 : 0) || (b.opened || 0) - (a.opened || 0));
   const mine = metas.filter(m => !m.sample).length;
-  $('libSub').textContent = mine ? `이 브라우저에 넣은 책 ${fmt(mine)}권` : '아직 넣은 책이 없어요. txt 파일을 열어 보세요.';
+  $('libSub').textContent = mine ? `이 브라우저에 넣은 책 ${fmt(mine)}권` : '아직 넣은 책이 없어요. 파일을 열어 보세요.';
   $('bookList').replaceChildren(...metas.map(bookRow));
   $('storeNote').textContent = Store.ok
     ? '책은 이 기기의 이 브라우저에만 저장돼요. 다른 기기에서는 보이지 않고, 사이트 데이터를 지우면 함께 지워져요.'
@@ -835,7 +1114,7 @@ function renderToc() {
   fb.addEventListener('click', () => { closeAll(); jumpTo(-1, true); });
   first.append(fb); list.append(first);
   if (!book.chaps.length) {
-    list.append(h('li', 'empty', "장 제목을 찾지 못했어요. '제1장', '12화', 'Chapter 3', '프롤로그'처럼 짧은 한 줄 제목이 있으면 목차가 만들어져요."));
+    list.append(h('li', 'empty', "장 제목을 찾지 못했어요. '제1장', '12화', 'Chapter 3', '프롤로그'처럼 짧은 한 줄 제목이나 워드의 제목 스타일이 있으면 목차가 만들어져요."));
   }
   let curEl = null;
   book.chaps.forEach((c, i) => {
@@ -914,6 +1193,8 @@ $('nextBtn').addEventListener('click', () => { next(); setChrome(true); });
 
 /* 파일 넣기 */
 const fileInput = $('fileInput');
+// 아이폰은 hwp 같은 낯선 확장자를 고르지 못하게 막을 때가 있어서 제한을 푼다
+if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) fileInput.removeAttribute('accept');
 fileInput.addEventListener('change', () => { const fs = [...fileInput.files]; fileInput.value = ''; if (fs.length) addFiles(fs); });
 $('fileLabel').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
 const pasteForm = $('pasteForm');
@@ -1042,9 +1323,9 @@ async function keepAwake() {
 
 /* ───────── 알림 ───────── */
 let tT = 0;
-function toast(msg) {
+function toast(msg, ms) {
   const t = $('toast'); t.textContent = msg; t.classList.add('on');
-  clearTimeout(tT); tT = setTimeout(() => t.classList.remove('on'), 2200);
+  clearTimeout(tT); tT = setTimeout(() => t.classList.remove('on'), ms || 2200);
 }
 
 /* ───────── 크기 변화·글꼴 로딩 ───────── */
