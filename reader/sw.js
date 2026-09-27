@@ -1,5 +1,6 @@
-// 한장 리더 오프라인 캐시
-const VERSION = 'hanjang-v1';
+// txt리더기 오프라인 캐시 (저장소 이름의 hanjang은 예전 이름, 넣은 책을 지키려고 그대로 둠)
+const VERSION = 'hanjang-v2';
+const FONTS = 'hanjang-fonts';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -7,7 +8,7 @@ self.addEventListener('install', e => {
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k.startsWith('hanjang-') && k !== VERSION).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k.startsWith('hanjang-') && k !== VERSION && k !== FONTS).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
@@ -16,7 +17,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   // 글꼴: 한 번 받은 조각은 계속 재사용
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    e.respondWith(caches.open(VERSION + '-fonts').then(async c => {
+    e.respondWith(caches.open(FONTS).then(async c => {
       const hit = await c.match(req); if (hit) return hit;
       try { const res = await fetch(req); if (res.ok || res.type === 'opaque') c.put(req, res.clone()); return res; }
       catch (err) { return hit || Response.error(); }

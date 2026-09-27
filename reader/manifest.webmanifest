@@ -1,6 +1,6 @@
 {
-  "name": "한장 리더",
-  "short_name": "한장",
+  "name": "txt리더기",
+  "short_name": "txt리더기",
   "lang": "ko",
   "description": "내 txt 파일을 한 장씩 넘기며 읽는 이북 리더",
   "start_url": "./",

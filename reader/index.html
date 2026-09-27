@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>한장 리더</title>
+<title>txt리더기</title>
 <meta name="description" content="내 txt 파일을 한 장씩 넘기며 읽는 이북 리더">
 <meta name="theme-color" content="#FAFAF7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="한장">
+<meta name="apple-mobile-web-app-title" content="txt리더기">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -338,14 +338,14 @@ document.documentElement.lang = 'ko';
 
 /* ───────── 예시 책 ───────── */
 const GUIDE_ID = 'guide';
-const GUIDE_TITLE = '한장 사용 안내서';
-const GUIDE_TEXT = `이 책은 한장 리더를 처음 열면 보이는 안내서예요. 내 txt 파일을 넣기 전에 한번 넘겨 보면서 손에 익혀 보세요. 화면 오른쪽을 누르면 다음 쪽으로 넘어가요.
+const GUIDE_TITLE = 'txt리더기 사용 안내서';
+const GUIDE_TEXT = `이 책은 txt리더기를 처음 열면 보이는 안내서예요. 내 txt 파일을 넣기 전에 한번 넘겨 보면서 손에 익혀 보세요. 화면 오른쪽을 누르면 다음 쪽으로 넘어가요.
 
 제1장 책 넣기
 
 왼쪽 위 서재 버튼을 누르면 서재가 열려요. 'txt 파일 열기'를 누르고 휴대폰이나 컴퓨터에 있는 텍스트 파일을 고르면 바로 책이 돼요. 여러 개를 한꺼번에 골라도 되고, 컴퓨터라면 파일을 화면 위로 끌어다 놓기만 해도 서재에 들어가요.
 
-오래된 한글 txt 파일은 EUC-KR 방식으로 저장된 경우가 많아서 다른 프로그램에서 열면 글자가 깨지곤 해요. 한장은 먼저 UTF-8로 읽어 보고, 맞지 않으면 EUC-KR로 다시 읽어요. 따로 고를 건 없어요.
+오래된 한글 txt 파일은 EUC-KR 방식으로 저장된 경우가 많아서 다른 프로그램에서 열면 글자가 깨지곤 해요. txt리더기는 먼저 UTF-8로 읽어 보고, 맞지 않으면 EUC-KR로 다시 읽어요. 따로 고를 건 없어요.
 
 파일이 아니라 어딘가에서 복사한 글이라면 '글 붙여넣기'를 누르세요. 컴퓨터에서는 읽는 화면에서 그냥 Ctrl+V를 눌러도 붙여넣기 칸이 열려요. 제목 칸을 비워 두면 첫 줄을 제목으로 써요.
 
@@ -365,13 +365,13 @@ const GUIDE_TEXT = `이 책은 한장 리더를 처음 열면 보이는 안내�
 
 오른쪽 위 '가가' 버튼을 누르면 글자 크기, 줄 간격, 여백, 글꼴, 배경을 바꿀 수 있어요. 글꼴은 바탕 계열 두 가지와 고딕 하나를 준비해 뒀어요.
 
-글자를 키우면 한 쪽에 들어가는 글이 줄어서 쪽 수가 다시 계산돼요. 그래도 읽던 자리는 그대로예요. 한장은 몇 쪽인지가 아니라 몇 번째 글자인지로 위치를 기억하거든요. 휴대폰을 가로로 돌려도 마찬가지예요.
+글자를 키우면 한 쪽에 들어가는 글이 줄어서 쪽 수가 다시 계산돼요. 그래도 읽던 자리는 그대로예요. txt리더기는 몇 쪽인지가 아니라 몇 번째 글자인지로 위치를 기억하거든요. 휴대폰을 가로로 돌려도 마찬가지예요.
 
 배경을 '자동'으로 두면 기기의 밝은 화면, 어두운 화면 설정을 따라가요. 불 끄고 읽을 때는 '밤'이 눈이 편하고, 낮에 오래 읽을 때는 '미색'이 종이 느낌에 가까워요.
 
 제4장 목차와 책갈피
 
-한장은 짧은 한 줄짜리 제목을 찾아서 목차를 만들어요. '제1장', '제12화', '3부', 'Chapter 5', '프롤로그', '에필로그', '작가의 말' 같은 줄이 있으면 장 제목으로 봐요. 웹소설처럼 '12화'나 '- 12 -'만 따로 적힌 줄도 알아봐요. 이 안내서의 목차도 이렇게 만들어졌어요.
+txt리더기는 짧은 한 줄짜리 제목을 찾아서 목차를 만들어요. '제1장', '제12화', '3부', 'Chapter 5', '프롤로그', '에필로그', '작가의 말' 같은 줄이 있으면 장 제목으로 봐요. 웹소설처럼 '12화'나 '- 12 -'만 따로 적힌 줄도 알아봐요. 이 안내서의 목차도 이렇게 만들어졌어요.
 
 목차 버튼을 누르면 장 목록이 나오고, 하나를 고르면 그 장으로 넘어가요. 장 제목을 못 찾은 책은 목차 없이 처음부터 끝까지 이어서 보여 줘요.
 
