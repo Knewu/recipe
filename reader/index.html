@@ -35,6 +35,10 @@
 /* 읽기 배경: 앱 테마와 별개로 고르는 종이 */
 .reader[data-paper="white"]{color-scheme:light;--paper:#FFFFFF;--ink:#17191B;--ink-2:#5D6268;--ink-3:#9DA1A6;--line:#E6E6E3;--wash:#F0F0EE;--accent:#2F4F96;--accent-ink:#FFFFFF;--spine:rgba(0,0,0,.06)}
 .reader[data-paper="ivory"]{color-scheme:light;--paper:#F3EBDC;--ink:#30271E;--ink-2:#77695A;--ink-3:#A89B8A;--line:#E0D5C1;--wash:#EADFCB;--accent:#2F4F96;--accent-ink:#FFFFFF;--spine:rgba(80,50,20,.09)}
+.reader[data-paper="eink"]{color-scheme:light;--paper:#E6E5E0;--ink:#1C1C1B;--ink-2:#545452;--ink-3:#8A8984;--line:#C8C7C1;--wash:#DAD9D3;--accent:#2A2A29;--accent-ink:#ECEBE6;--spine:rgba(0,0,0,.07);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.reader[data-paper="eink"] .bar{background-color:var(--paper);background-image:inherit;-webkit-backdrop-filter:none;backdrop-filter:none}
+.reader[data-paper="eink"] .flow{-webkit-font-smoothing:antialiased}
+.reader[data-turn="eink"] .bar,.reader[data-turn="eink"] .ribbon{transition:none;animation:none}
 .reader[data-paper="night"]{color-scheme:dark;--paper:#0E1012;--ink:#B7BBBF;--ink-2:#7B8187;--ink-3:#50565C;--line:#23272B;--wash:#1A1D20;--accent:#8EA4DC;--accent-ink:#0E1220;--spine:rgba(255,255,255,.035)}
 
 html{height:100%;box-sizing:border-box;-webkit-text-size-adjust:100%}
@@ -60,6 +64,8 @@ svg{flex:none}
 .tp h1{margin:0;font-size:1.95em;line-height:1.3;font-weight:700;letter-spacing:-.015em;text-wrap:balance}
 .tp .rule{display:block;width:2.4em;height:2px;background:var(--accent)}
 .tp .meta{font:500 13px/1.7 var(--f-ui);color:var(--ink-2);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.flow.ghost{position:absolute;left:0;top:0;opacity:0;transition:none;pointer-events:none;will-change:opacity}
+.flash{position:absolute;inset:0;z-index:4;pointer-events:none}
 .spine{position:absolute;width:40px;margin-left:-20px;background:linear-gradient(90deg,transparent,var(--spine) 50%,transparent);pointer-events:none}
 .ribbon{position:absolute;top:var(--top-gap);width:20px;height:54px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);pointer-events:none;animation:drop .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes drop{from{transform:translateY(-100%)}}
@@ -183,6 +189,7 @@ svg{flex:none}
 .sw-white{background:#FFFFFF;color:#17191B}
 .sw-ivory{background:#F3EBDC;color:#30271E}
 .sw-night{background:#0E1012;color:#B7BBBF}
+.sw-eink{background:#E6E5E0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");color:#1C1C1B}
 .switch{position:relative;flex:none;width:46px;height:28px;border:0;border-radius:14px;background:var(--line);cursor:pointer;transition:background .2s}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
 .switch[aria-checked="true"]{background:var(--accent)}
@@ -205,9 +212,10 @@ body{font-size:14px;overscroll-behavior:none}
 <div class="reader chrome" id="reader">
   <main class="stage" id="stage" aria-label="책 본문. 오른쪽을 누르면 다음 쪽, 왼쪽을 누르면 앞쪽">
     <div class="runhead"><span id="runhead"></span></div>
-    <div class="viewport" id="viewport"><div class="flow" id="flow" lang="ko"></div></div>
+    <div class="viewport" id="viewport"><div class="flow ghost" id="ghost" lang="ko" aria-hidden="true"></div><div class="flow" id="flow" lang="ko"></div></div>
     <div class="spine" id="spine" hidden></div>
     <div class="ribbon" id="ribbon" hidden></div>
+    <div class="flash" id="flash" hidden></div>
     <div class="folio" id="folio"><span></span><span id="folioPage"></span><span class="folio-pct" id="folioPct"></span></div>
   </main>
 
@@ -315,6 +323,7 @@ body{font-size:14px;overscroll-behavior:none}
       <button type="button" data-v="white"><span class="sw sw-white">가</span>흰 종이</button>
       <button type="button" data-v="ivory"><span class="sw sw-ivory">가</span>미색</button>
       <button type="button" data-v="night"><span class="sw sw-night">가</span>밤</button>
+      <button type="button" data-v="eink"><span class="sw sw-eink">가</span>전자잉크</button>
     </div>
   </div>
   <div class="set-row">
@@ -322,8 +331,12 @@ body{font-size:14px;overscroll-behavior:none}
     <button class="switch" type="button" role="switch" id="spreadSw" aria-label="넓은 화면에서 두 쪽 보기"></button>
   </div>
   <div class="set-row">
-    <span class="set-label">넘길 때 움직임</span>
-    <button class="switch" type="button" role="switch" id="motionSw" aria-label="넘길 때 움직임"></button>
+    <span class="set-label">넘김 효과</span>
+    <div class="seg" data-key="turn"><button type="button" data-v="slide">밀기</button><button type="button" data-v="eink">전자잉크</button><button type="button" data-v="none">없음</button></div>
+  </div>
+  <div class="set-row" id="flashRow">
+    <span class="set-label">새로고침 깜빡임</span>
+    <div class="seg" data-key="flash"><button type="button" data-v="off">끔</button><button type="button" data-v="some">6쪽마다</button><button type="button" data-v="always">매 쪽</button></div>
   </div>
 </section>
 
@@ -371,6 +384,8 @@ const GUIDE_TEXT = `이 책은 txt리더기를 처음 열면 보이는 안내서
 
 배경을 '자동'으로 두면 기기의 밝은 화면, 어두운 화면 설정을 따라가요. 불 끄고 읽을 때는 '밤'이 눈이 편하고, 낮에 오래 읽을 때는 '미색'이 종이 느낌에 가까워요.
 
+배경에서 '전자잉크'를 고르면 전자책 단말기처럼 회색빛이 도는 종이 질감에 흑백 화면이 돼요. 쪽을 넘길 때 움직임 없이 탁 바뀌고, 앞 쪽 글자가 잔상처럼 잠깐 남았다가 사라져요. 몇 쪽마다 화면이 까맣게 한 번 깜빡이는 건 전자잉크 단말기가 쌓인 잔상을 지우는 새로고침을 흉내 낸 거예요. 깜빡임은 설정에서 끄거나 매 쪽으로 바꿀 수 있어요.
+
 제4장 목차와 책갈피
 
 txt리더기는 짧은 한 줄짜리 제목을 찾아서 목차를 만들어요. '제1장', '제12화', '3부', 'Chapter 5', '프롤로그', '에필로그', '작가의 말' 같은 줄이 있으면 장 제목으로 봐요. 웹소설처럼 '12화'나 '- 12 -'만 따로 적힌 줄도 알아봐요. 이 안내서의 목차도 이렇게 만들어졌어요.
@@ -413,10 +428,13 @@ const STANDALONE = window.navigator.standalone === true || !!(window.matchMedia 
 const TOP_GAP = STANDALONE ? 30 : 0;
 
 /* ───────── 설정 ───────── */
-const DEF = { size: 18, lh: 1.8, margin: 'normal', font: 'batang', paper: 'auto', spread: true,
-  motion: !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) };
+const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const DEF = { size: 18, lh: 1.8, margin: 'normal', font: 'batang', paper: 'auto', spread: true, turn: RM ? 'none' : 'slide', flash: 'some' };
 let S = { ...DEF };
-try { const raw = localStorage.getItem('hanjang.settings'); if (raw) S = { ...DEF, ...JSON.parse(raw) }; } catch (e) {}
+try {
+  const raw = localStorage.getItem('hanjang.settings');
+  if (raw) { const o = JSON.parse(raw); if (!('turn' in o) && o.motion === false) o.turn = 'none'; delete o.motion; S = { ...DEF, ...o }; }
+} catch (e) {}
 function saveS() { try { localStorage.setItem('hanjang.settings', JSON.stringify(S)); } catch (e) {} }
 const FONTS = { batang: 'var(--f-batang)', myeongjo: 'var(--f-myeongjo)', gothic: 'var(--f-gothic)' };
 
@@ -568,6 +586,9 @@ function layout() {
   flow.style.columnCount = n;
   flow.style.columnGap = G + 'px';
   flow.style.setProperty('--col-h', vh + 'px');
+  Object.assign(ghost.style, { width: vw + 'px', height: vh + 'px', columnCount: n, columnGap: G + 'px' });
+  ghost.style.setProperty('--col-h', vh + 'px');
+  ghostSec = -1;
   spine.hidden = n !== 2;
   if (n === 2) Object.assign(spine.style, { left: (geo.left + colW + G / 2) + 'px', top: top + 'px', height: vh + 'px' });
   ribbon.style.left = (geo.left + vw - 32) + 'px';
@@ -617,32 +638,63 @@ function measure() {
   pageStarts = starts.slice(0, pageCount);
 }
 function show(animate) {
-  flow.style.transition = (animate && S.motion) ? '' : 'none';
+  flow.style.transition = (animate && S.turn === 'slide') ? '' : 'none';
   flow.style.transform = `translate3d(${-cur.page * geo.stride}px,0,0)`;
   updateUI();
 }
 function enterAnim(dir) {
-  if (!S.motion || !flow.animate) return;
+  if (S.turn !== 'slide' || !flow.animate) return;
   const x = -cur.page * geo.stride;
   flow.animate([{ transform: `translate3d(${x + dir * 28}px,0,0)`, opacity: 0 }, { transform: `translate3d(${x}px,0,0)`, opacity: 1 }],
     { duration: 240, easing: 'cubic-bezier(.2,.7,.2,1)' });
 }
 function bump(dir) {
-  if (S.motion && viewport.animate) viewport.animate([{ transform: 'none' }, { transform: `translateX(${-dir * 10}px)` }, { transform: 'none' }], { duration: 220 });
+  if (S.turn === 'slide' && viewport.animate) viewport.animate([{ transform: 'none' }, { transform: `translateX(${-dir * 10}px)` }, { transform: 'none' }], { duration: 220 });
+}
+
+/* ───────── 전자잉크 효과: 잔상과 새로고침 깜빡임 ───────── */
+const ghost = $('ghost'), flash = $('flash');
+let ghostSec = -1, einkTurns = 0;
+function stashGhost() {             // 장이 바뀌기 직전 쪽을 잔상용으로 옮겨 둔다
+  if (S.turn !== 'eink') return;
+  ghost.replaceChildren(...flow.childNodes); ghostSec = cur.sec;
+}
+function einkEffect(oldPage, chapterChange) {
+  einkTurns++;
+  const every = S.flash === 'always' ? 1 : S.flash === 'some' ? 6 : 0;
+  if (every && !RM && (einkTurns % every === 0 || (chapterChange && every > 1))) { flashNow(); return; }
+  if (RM || !ghost.animate) return;
+  if (!chapterChange && ghostSec !== cur.sec) { ghost.replaceChildren(...flow.cloneNode(true).childNodes); ghostSec = cur.sec; }   // 장이 바뀐 때는 옮겨 둔 앞 장을 쓴다
+  ghost.getAnimations().forEach(a => a.cancel());
+  ghost.style.transform = `translate3d(${-oldPage * geo.stride}px,0,0)`;
+  ghost.animate([{ opacity: .16 }, { opacity: .07, offset: .35 }, { opacity: 0 }], { duration: 520, easing: 'ease-out' });
+}
+function flashNow() {
+  if (RM || !flash.animate) return;
+  const cs = getComputedStyle(reader), ink = cs.getPropertyValue('--ink').trim(), paper = cs.getPropertyValue('--paper').trim();
+  ghost.getAnimations().forEach(a => a.cancel());   // 새로고침은 잔상을 지운다
+  flash.hidden = false;
+  const a = flash.animate([
+    { backgroundColor: ink, opacity: 1, offset: 0 }, { backgroundColor: ink, opacity: 1, offset: .4 },
+    { backgroundColor: paper, opacity: 1, offset: .62 }, { backgroundColor: paper, opacity: 0, offset: 1 }
+  ], { duration: 360, easing: 'linear' });
+  a.onfinish = a.oncancel = () => { flash.hidden = true; };
 }
 
 /* ───────── 넘기기 ───────── */
 function next() {
   if (!book) return false;
-  if (cur.page < pageCount - 1) { cur.page++; cur.pos = pageStarts[cur.page]; show(true); }
-  else if (cur.sec < book.secs.length - 1) { cur.sec++; renderSection(); measure(); cur.page = 0; cur.pos = pageStarts[0]; show(false); enterAnim(1); }
+  const old = cur.page;
+  if (cur.page < pageCount - 1) { cur.page++; cur.pos = pageStarts[cur.page]; show(true); if (S.turn === 'eink') einkEffect(old, false); }
+  else if (cur.sec < book.secs.length - 1) { stashGhost(); cur.sec++; renderSection(); measure(); cur.page = 0; cur.pos = pageStarts[0]; show(false); enterAnim(1); if (S.turn === 'eink') einkEffect(old, true); }
   else { bump(1); toast('마지막 쪽이에요.'); return false; }
   setChrome(false); persist(); return true;
 }
 function prev() {
   if (!book) return false;
-  if (cur.page > 0) { cur.page--; cur.pos = pageStarts[cur.page]; show(true); }
-  else if (cur.sec > 0) { cur.sec--; renderSection(); measure(); cur.page = pageCount - 1; cur.pos = pageStarts[cur.page]; show(false); enterAnim(-1); }
+  const old = cur.page;
+  if (cur.page > 0) { cur.page--; cur.pos = pageStarts[cur.page]; show(true); if (S.turn === 'eink') einkEffect(old, false); }
+  else if (cur.sec > 0) { stashGhost(); cur.sec--; renderSection(); measure(); cur.page = pageCount - 1; cur.pos = pageStarts[cur.page]; show(false); enterAnim(-1); if (S.turn === 'eink') einkEffect(old, true); }
   else { bump(-1); return false; }
   setChrome(false); persist(); return true;
 }
@@ -652,7 +704,7 @@ function jumpTo(pos, anim) {
   if (i !== cur.sec) { cur.sec = i; renderSection(); }
   measure();
   cur.page = findPage(pos); cur.pos = pageStarts[cur.page];
-  show(false); if (anim) enterAnim(0);
+  show(false); if (anim) { enterAnim(0); if (S.turn === 'eink' && S.flash !== 'off') flashNow(); }
   persist();
 }
 function reflow() {
@@ -1234,8 +1286,10 @@ window.addEventListener('drop', e => { if (!hasFiles(e)) return; e.preventDefaul
 function applySettings() {
   reader.style.setProperty('--fs', S.size + 'px');
   reader.style.setProperty('--lh', S.lh);
-  flow.style.fontFamily = FONTS[S.font] || FONTS.batang;
+  flow.style.fontFamily = ghost.style.fontFamily = FONTS[S.font] || FONTS.batang;
   if (S.paper === 'auto') reader.removeAttribute('data-paper'); else reader.dataset.paper = S.paper;
+  reader.dataset.turn = S.turn;
+  $('flashRow').hidden = S.turn !== 'eink';
   const bg = S.paper === 'auto' ? '' : getComputedStyle(reader).backgroundColor;
   document.body.style.background = bg; document.documentElement.style.background = bg;
   const tc = document.querySelector('meta[name="theme-color"]');
@@ -1248,17 +1302,17 @@ function syncSettings() {
     g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(String(S[k]) === b.dataset.v)));
   });
   $('spreadSw').setAttribute('aria-checked', String(!!S.spread));
-  $('motionSw').setAttribute('aria-checked', String(!!S.motion));
 }
 function changed() { saveS(); applySettings(); syncSettings(); reflow(); }
 document.querySelectorAll('[data-key]').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const k = g.dataset.key; S[k] = k === 'lh' ? parseFloat(b.dataset.v) : b.dataset.v; changed();
+  const k = g.dataset.key; S[k] = k === 'lh' ? parseFloat(b.dataset.v) : b.dataset.v;
+  if (k === 'paper' && S.paper === 'eink' && S.turn === 'slide') { S.turn = 'eink'; toast('넘김 효과도 전자잉크로 바꿨어요.'); }
+  changed();
 }));
 $('fsDown').addEventListener('click', () => { S.size = clamp(S.size - 1, 13, 34); changed(); });
 $('fsUp').addEventListener('click', () => { S.size = clamp(S.size + 1, 13, 34); changed(); });
 $('spreadSw').addEventListener('click', () => { S.spread = !S.spread; changed(); });
-$('motionSw').addEventListener('click', () => { S.motion = !S.motion; changed(); });
 
 /* ───────── 진행 막대 ───────── */
 function scrubPos() { const v = +scrub.value; return v <= 0 ? -1 : Math.floor(v / 1000 * book.len); }
@@ -1285,7 +1339,7 @@ stage.addEventListener('pointermove', e => {
   if (!pd || e.pointerId !== pd.id) return;
   const dx = e.clientX - pd.x, dy = e.clientY - pd.y;
   if (!pd.drag && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) pd.drag = true;
-  if (pd.drag) {
+  if (pd.drag && S.turn === 'slide') {
     flow.style.transition = 'none';
     flow.style.transform = `translate3d(${-cur.page * geo.stride + dx * 0.85}px,0,0)`;
   }
